@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hearts and Mind — V4S Implementation Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8;
+    --warm-white: #FDFAF4;
+    --deep: #1A1A2E;
+    --deep2: #16213E;
+    --brand: #E84855;
+    --brand2: #FF6B35;
+    --teal: #2EC4B6;
+    --gold: #F4A261;
+    --purple: #7B4EA6;
+    --slate: #4A5568;
+    --light-slate: #718096;
+    --border: rgba(26,26,46,0.12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--deep);
+    overflow-x: hidden;
+  }
+
+  /* ── SLIDE CONTAINER ── */
+  .deck { width: 100%; }
+
+  .slide {
+    width: 100%;
+    min-height: 100vh;
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    page-break-after: always;
+  }
+
+  /* ── SLIDE 1: COVER ── */
+  .slide-cover {
+    background: var(--deep);
+    color: var(--cream);
+    overflow: hidden;
+  }
+  .slide-cover::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,72,85,0.35), transparent 70%);
+  }
+  .slide-cover::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; left: 100px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(46,196,182,0.2), transparent 70%);
+  }
+  .cover-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 24px;
+  }
+  .cover-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(42px, 6vw, 72px);
+    line-height: 1.05;
+    margin-bottom: 20px;
+    color: var(--warm-white);
+  }
+  .cover-title span { color: var(--brand); font-style: italic; }
+  .cover-sub {
+    font-size: 18px;
+    font-weight: 300;
+    color: rgba(253,250,244,0.7);
+    max-width: 600px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .meta-item { }
+  .meta-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+  .meta-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--warm-white);
+  }
+  .slide-num {
+    position: absolute;
+    bottom: 40px; right: 80px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(253,250,244,0.3);
+  }
+
+  /* ── SECTION HEADER SLIDES ── */
+  .slide-section {
+    background: var(--brand);
+    color: white;
+    align-items: flex-start;
+  }
+  .section-num {
+    font-size: 100px;
+    font-family: 'DM Serif Display', serif;
+    opacity: 0.2;
+    line-height: 1;
+    margin-bottom: -20px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(36px, 5vw, 64px);
+    color: white;
+    max-width: 600px;
+    line-height: 1.1;
+  }
+  .section-desc {
+    margin-top: 20px;
+    font-size: 17px;
+    font-weight: 300;
+    opacity: 0.85;
+    max-width: 500px;
+    line-height: 1.7;
+  }
+
+  /* ── CONTENT SLIDES ── */
+  .slide-content { background: var(--warm-white); }
+  .slide-alt { background: var(--cream); }
+
+  .slide-header {
+    margin-bottom: 40px;
+  }
+  .slide-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--brand);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .slide-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    color: var(--deep);
+    line-height: 1.15;
+  }
+  .slide-title em { color: var(--brand); font-style: italic; }
+
+  /* ── 2-COL LAYOUT ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .card.red::before { background: var(--brand); }
+  .card.teal::before { background: var(--teal); }
+  .card.gold::before { background: var(--gold); }
+  .card.purple::before { background: var(--purple); }
+  .card.orange::before { background: var(--brand2); }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--deep);
+  }
+  .card-body {
+    font-size: 14px;
+    color: var(--slate);
+    line-height: 1.65;
+  }
+
+  /* ── PAIN POINTS TABLE ── */
+  .pain-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pain-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    background: white;
+    border-radius: 10px;
+    border-left: 3px solid var(--brand);
+  }
+  .pain-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .pain-text { font-size: 14px; color: var(--slate); line-height: 1.5; }
+  .pain-text strong { color: var(--deep); font-weight: 600; }
+
+  /* ── PHASES TIMELINE ── */
+  .phases { display: flex; flex-direction: column; gap: 12px; }
+  .phase-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 120px 100px;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .phase-row:hover { border-color: var(--teal); }
+  .phase-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    text-align: center;
+  }
+  .badge-0 { background: #E8F4FD; color: #2563EB; }
+  .badge-1 { background: #FEF3C7; color: #92400E; }
+  .badge-2 { background: #FCE7F3; color: #9D174D; }
+  .badge-3 { background: #D1FAE5; color: #065F46; }
+  .badge-4 { background: #EDE9FE; color: #5B21B6; }
+  .badge-5 { background: #FFF7ED; color: #C2410C; }
+  .badge-6 { background: #F0FDF4; color: #166534; }
+  .badge-7 { background: #F8F9FA; color: #374151; }
+
+  .phase-name { font-size: 14px; font-weight: 600; color: var(--deep); }
+  .phase-desc { font-size: 12px; color: var(--light-slate); margin-top: 2px; }
+  .phase-dur { font-size: 13px; color: var(--teal); font-weight: 600; text-align: right; }
+  .phase-status {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .status-ready { background: #D1FAE5; color: #065F46; }
+  .status-seq { background: #EDE9FE; color: #5B21B6; }
+
+  /* ── VOLUNTEER TYPES ── */
+  .vol-type {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+  .vol-type h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .vol-type .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .tag-primary { background: #FEF3C7; color: #92400E; }
+  .tag-secondary { background: #D1FAE5; color: #065F46; }
+  .vol-list { list-style: none; }
+  .vol-list li {
+    font-size: 13px;
+    color: var(--slate);
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vol-list li::before { content: '→'; color: var(--teal); font-weight: 700; }
+
+  /* ── DATA MODEL BOX ── */
+  .object-box {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid var(--teal);
+    overflow: hidden;
+  }
+  .object-header {
+    background: var(--teal);
+    color: white;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .object-fields {
+    padding: 12px 16px;
+  }
+  .field-row {
+    font-size: 12px;
+    color: var(--slate);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: grid;
+    grid-template-columns: 1fr 80px;
+    gap: 8px;
+  }
+  .field-type { color: var(--brand); font-weight: 500; font-size: 11px; }
+
+  /* ── GATE CHECKLIST ── */
+  .gate-list { display: flex; flex-direction: column; gap: 8px; }
+  .gate-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--slate);
+  }
+  .gate-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--teal);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* ── CLOSING SLIDE ── */
+  .slide-close {
+    background: var(--deep2);
+    color: var(--cream);
+    text-align: center;
+    align-items: center;
+  }
+  .close-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(40px, 6vw, 80px);
+    color: var(--warm-white);
+    margin-bottom: 20px;
+    line-height: 1.1;
+  }
+  .close-title span { color: var(--teal); }
+  .close-sub {
+    font-size: 18px;
+    font-weight: 300;
+    opacity: 0.7;
+    max-width: 500px;
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+  .close-tags {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .close-tag {
+    padding: 10px 22px;
+    border: 1px solid rgba(46,196,182,0.4);
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--teal);
+  }
+
+  /* ── DIVIDER ── */
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 30px 0;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .slide { page-break-after: always; min-height: 100vh; }
+  }
+
+  @media (max-width: 768px) {
+    .slide { padding: 40px 24px; }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .phase-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- ══ SLIDE 1: COVER ══ -->
+  <div class="slide slide-cover">
+    <div class="cover-tag">Phase 2 Implementation Plan · April 2026</div>
+    <h1 class="cover-title">
+      Hearts &amp; Mind<br>
+      <span>Volunteer Management</span><br>
+      Salesforce V4S
+    </h1>
+    <p class="cover-sub">
+      A step-by-step gated implementation of Volunteers for Salesforce (V4S) and PMM
+      to replace manual Google Drive workflows and empower the Hearts &amp; Mind coordinator team.
+    </p>
+    <div class="cover-meta">
+      <div class="meta-item">
+        <div class="meta-label">Prepared by</div>
+        <div class="meta-value">Cloud Deck Inc.</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Phase</div>
+        <div class="meta-value">2 — Volunteer Management</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Phase 1 Status</div>
+        <div class="meta-value">✅ Live — Support Request Intake</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Est. Duration</div>
+        <div class="meta-value">~9 Weeks</div>
+      </div>
+    </div>
+    <div class="slide-num">01 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 2: AGENDA ══ -->
+  <div class="slide slide-content">
+    <div class="slide-header">
+      <div class="slide-label">Today's Presentation</div>
+      <h2 class="slide-title">What We Will Cover</h2>
+    </div>
+    <div class="three-col">
+      <div class="card red">
+        <div class="card-icon">🔍</div>
+        <div class="card-title">The Problem</div>
+        <div class="card-body">Where Hearts &amp; Mind is today — manual processes, pain points, and what needs to change.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-icon">🏗️</div>
+        <div class="card-title">The Solution</div>
+        <div class="card-body">How V4S + PMM will work together to support both student and general volunteers.</div>
+      </div>
+      <div class="card gold">
+        <div class="card-icon">📋</div>
+        <div class="card-title">The Plan</div>
+        <div class="card-body">8 gated phases, each with a clear gate condition before we proceed to the next step.</div>
+      </div>
+      <div class="card purple">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">Volunteer Flows</div>
+        <div class="card-body">End-to-end process maps for student intake, onboarding, matching, visits, and exit.</div>
+      </div>
+      <div class="card orange">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Data Model</div>
+        <div class="card-body">The key Salesforce objects and relationships we will build.</div>
+      </div>
+      <div class="card red">
+        <div class="card-icon">✅</div>
+        <div class="card-title">Next Steps</div>
+        <div class="card-body">What happens after this session and who needs to do what.</div>
+      </div>
+    </div>
+    <div class="slide-num">02 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 3: CONTEXT ══ -->
+  <div class="slide slide-alt">
+    <div class="slide-header">
+      <div class="slide-label">Project Context</div>
+      <h2 class="slide-title">Where We Are &amp; <em>Where We're Going</em></h2>
+    </div>
+    <div class="two-col">
+      <div>
+        <div style="background:white;border-radius:16px;padding:28px;border:1px solid var(--border);margin-bottom:20px;">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:12px;">✅ Phase 1 — Complete &amp; Live</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:10px;">Caregiver Support Request Intake</div>
+          <ul style="list-style:none;font-size:14px;color:var(--slate);line-height:2;">
+            <li>→ Real-time web-to-lead capture for caregivers</li>
+            <li>→ 48-hour SLA tracking on cases</li>
+            <li>→ Intelligent pod-based routing</li>
+          </ul>
+        </div>
+        <div style="background:var(--brand);border-radius:16px;padding:24px;color:white;">
+          <div style="font-size:12px;letter-spacing:2px;margin-bottom:8px;opacity:0.8;">⚙️ Phase 2 — In Progress (This Plan)</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:8px;">Volunteer Management (V4S)</div>
+          <div style="font-size:14px;opacity:0.9;line-height:1.6;">Recruit, onboard, match, and track volunteers — especially the student placement programme.</div>
+        </div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:28px;border:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:600;color:var(--deep);margin-bottom:20px;">Phase Relationship</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--cream);border-radius:10px;">
+            <span style="font-size:24px;">🏠</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;">Caregiver</div>
+              <div style="font-size:12px;color:var(--light-slate);">Requests support → Phase 1 Case created</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:20px;color:var(--brand);">↕</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--cream);border-radius:10px;">
+            <span style="font-size:24px;">🤝</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;">Volunteers</div>
+              <div style="font-size:12px;color:var(--light-slate);">Supply the support → Phase 2 V4S Assignment</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:20px;color:var(--teal);">↕</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--cream);border-radius:10px;">
+            <span style="font-size:24px;">📅</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;">Programs (PMM)</div>
+              <div style="font-size:12px;color:var(--light-slate);">Workshops, events, virtual activities</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">03 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 4: PAIN POINTS ══ -->
+  <div class="slide slide-content">
+    <div class="slide-header">
+      <div class="slide-label">Current State</div>
+      <h2 class="slide-title">The <em>Pain Points</em> We're Solving</h2>
+    </div>
+    <div class="two-col">
+      <div class="pain-list">
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>Manual Google Drive folders</strong> per student — no centralised tracking, no automation</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>Document verification</strong> (VSC, CPR, CPI etc.) tracked manually with no alerts</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>No formal hours tracking</strong> — relies on task output as an indirect proxy</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>WhatsApp coordination</strong> — informal, not auditable, easy to miss messages</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>No gender/safety pairing rules</strong> enforced in the system — all manual judgment</div>
+        </div>
+      </div>
+      <div class="pain-list">
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>Volunteer feedback</strong> as freeform Google Docs — can't report or analyse</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>No proximity-based matching</strong> — coordinators assign manually without distance data</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>V4S doesn't natively support</strong> school-mediated student intake — requires custom build</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>Post-placement transitions</strong> tracked manually — no system record of who stays on</div>
+        </div>
+        <div class="pain-item">
+          <div class="pain-dot"></div>
+          <div class="pain-text"><strong>Access revocation</strong> relies on memory — no automated off-boarding trigger</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">04 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 5: VOLUNTEER TYPES ══ -->
+  <div class="slide slide-alt">
+    <div class="slide-header">
+      <div class="slide-label">Key Discovery</div>
+      <h2 class="slide-title">Two Classes of <em>Volunteers</em></h2>
+    </div>
+    <div class="two-col">
+      <div class="vol-type" style="border-left:4px solid var(--brand);">
+        <span class="tag tag-primary">PRIMARY — Majority</span>
+        <h3>👩‍🎓 Student Volunteers</h3>
+        <ul class="vol-list">
+          <li>Source: Colleges / Universities (formal placement)</li>
+          <li>Entry: School submits → H&amp;M reviews → interview → docs</li>
+          <li>Programmes: PSW, CDSW, DSW, BSW, MSW, AMH</li>
+          <li>Basic: in-home tasks (laundry, meals, errands)</li>
+          <li>Advanced: emotional support, supervision, referrals</li>
+          <li>Work: 30% in-person, 70% virtual</li>
+          <li>Requires: 5 compliance documents from school</li>
+          <li>V4S fit: <strong>Custom record type + Student Placement object</strong></li>
+        </ul>
+      </div>
+      <div class="vol-type" style="border-left:4px solid var(--teal);">
+        <span class="tag tag-secondary">SECONDARY — Low Volume</span>
+        <h3>🌍 General Volunteers</h3>
+        <ul class="vol-list">
+          <li>Source: Charity Village, website, referrals</li>
+          <li>Entry: Web form → coordinator interview → onboard</li>
+          <li>Roles: Event support, outreach, respite</li>
+          <li>Documents: Vary by role (VSC for respite, lighter for events)</li>
+          <li>Volume: ~3 to date (low but growing)</li>
+          <li>Many are ex-students who stayed after placement</li>
+          <li>V4S fit: <strong>Standard V4S web-to-lead flow works well</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div style="margin-top:24px;padding:16px 20px;background:white;border-radius:12px;border:1px solid var(--border);font-size:14px;color:var(--slate);">
+      <strong style="color:var(--deep);">🏗️ Architecture Implication:</strong>
+      Both types use the Salesforce <strong>Contact</strong> object with different <strong>Record Types</strong>.
+      Students additionally link to a custom <strong>Student Placement</strong> object that tracks all placement-specific data.
+    </div>
+    <div class="slide-num">05 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 6: DATA MODEL ══ -->
+  <div class="slide slide-content">
+    <div class="slide-header">
+      <div class="slide-label">Technical Architecture</div>
+      <h2 class="slide-title">Proposed <em>Data Model</em></h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+      <div class="object-box">
+        <div class="object-header">📋 Contact (Volunteer)</div>
+        <div class="object-fields">
+          <div class="field-row"><span>Record Type</span><span class="field-type">Student / General</span></div>
+          <div class="field-row"><span>Volunteer Type</span><span class="field-type">Picklist</span></div>
+          <div class="field-row"><span>Drives</span><span class="field-type">Checkbox</span></div>
+          <div class="field-row"><span>Tech Savvy</span><span class="field-type">Checkbox</span></div>
+          <div class="field-row"><span>Volunteer Status</span><span class="field-type">Picklist</span></div>
+          <div class="field-row"><span>Gender</span><span class="field-type">Picklist</span></div>
+          <div class="field-row"><span>Skills</span><span class="field-type">Multi-select</span></div>
+          <div class="field-row"><span>Address (Geocoded)</span><span class="field-type">Address</span></div>
+        </div>
+      </div>
+      <div class="object-box" style="border-color:var(--brand);">
+        <div class="object-header" style="background:var(--brand);">🎓 Student Placement (Custom)</div>
+        <div class="object-fields">
+          <div class="field-row"><span>Student (Contact)</span><span class="field-type">Lookup</span></div>
+          <div class="field-row"><span>School</span><span class="field-type">Text</span></div>
+          <div class="field-row"><span>Programme</span><span class="field-type">Picklist</span></div>
+          <div class="field-row"><span>Placement Status</span><span class="field-type">Picklist</span></div>
+          <div class="field-row"><span>Agreement Status</span><span class="field-type">Picklist</span></div>
+          <div class="field-row"><span>VSC / CPR / CPI docs</span><span class="field-type">Checkbox ×5</span></div>
+          <div class="field-row"><span>Orientation Complete</span><span class="field-type">Checkbox</span></div>
+          <div class="field-row"><span>Remote / In-Person Hrs</span><span class="field-type">Number</span></div>
+          <div class="field-row"><span>Exit Decision</span><span class="field-type">Picklist</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="object-box" style="border-color:var(--gold);">
+          <div class="object-header" style="background:var(--gold);color:var(--deep);">📅 V4S Volunteer Job</div>
+          <div class="object-fields">
+            <div class="field-row"><span>Linked to Case</span><span class="field-type">Lookup</span></div>
+            <div class="field-row"><span>Programme</span><span class="field-type">Lookup</span></div>
+          </div>
+        </div>
+        <div class="object-box" style="border-color:var(--gold);">
+          <div class="object-header" style="background:var(--gold);color:var(--deep);">🕐 V4S Volunteer Shift</div>
+          <div class="object-fields">
+            <div class="field-row"><span>Date/Time</span><span class="field-type">DateTime</span></div>
+            <div class="field-row"><span>Location type</span><span class="field-type">Picklist</span></div>
+          </div>
+        </div>
+        <div class="object-box" style="border-color:var(--purple);">
+          <div class="object-header" style="background:var(--purple);">📊 PMM Program</div>
+          <div class="object-fields">
+            <div class="field-row"><span>Program Engagements</span><span class="field-type">Related</span></div>
+            <div class="field-row"><span>Service Deliveries</span><span class="field-type">Related</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">06 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 7: PHASES OVERVIEW ══ -->
+  <div class="slide slide-alt">
+    <div class="slide-header">
+      <div class="slide-label">Gated Approach</div>
+      <h2 class="slide-title">8 Phases — <em>Nothing Moves Forward Without a Gate</em></h2>
+    </div>
+    <div class="phases">
+      <div class="phase-row">
+        <span class="phase-badge badge-0">PHASE 0</span>
+        <div><div class="phase-name">Foundation &amp; Data Model</div><div class="phase-desc">Contact record types, Student Placement object, custom fields</div></div>
+        <div class="phase-dur">1 week</div>
+        <div class="phase-status status-ready">Ready to Start</div>
+      </div>
+      <div class="phase-row">
+        <span class="phase-badge badge-1">PHASE 1</span>
+        <div><div class="phase-name">Student Intake</div><div class="phase-desc">School submission form → Contact + Placement record → coordinator notified</div></div>
+        <div class="phase-dur">1–2 weeks</div>
+        <div class="phase-status status-seq">After Phase 0</div>
+      </div>
+      <div class="phase-row">
+        <span class="phase-badge badge-2">PHASE 2</span>
+        <div><div class="phase-name">Onboarding &amp; Compliance</div><div class="phase-desc">Service agreements, orientation checklist, secure document storage</div></div>
+        <div class="phase-dur">1 week</div>
+        <div class="phase-status status-seq">After Phase 1</div>
+      </div>
+      <div class="phase-row">
+        <span class="phase-badge badge-3">PHASE 3</span>
+        <div><div class="phase-name">General Volunteer Intake</div><div class="phase-desc">Standard V4S web form for walk-in volunteers</div></div>
+        <div class="phase-dur">0.5 weeks</div>
+        <div class="phase-status status-seq">Parallel to 2</div>
+      </div>
+      <div class="phase-row">
+        <span class="phase-badge badge-4">PHASE 4</span>
+        <div><div class="phase-name">Matching &amp; Assignment</div><div class="phase-desc">Proximity, gender safety rules, driving filter, case assignment</div></div>
+        <div class="phase-dur">2 weeks</div>
+        <div class="phase-status status-seq">After Phase 2+3</div>
+      </div>
+      <div class="phase-row">
+        <span class="phase-badge badge-5">PHASE 5</span>
+        <div><div class="phase-name">Hours &amp; Feedback Tracking</div><div class="phase-desc">Remote/in-person hours log, post-visit reports in Salesforce</div></div>
+        <div class="phase-dur">1 week</div>
+        <div class="phase-status status-seq">After Phase 4</div>
+      </div>
+      <div class="phase-row">
+        <span class="phase-badge badge-6">PHASE 6</span>
+        <div><div class="phase-name">Exit &amp; Access Management</div><div class="phase-desc">Stay-on vs end decision, access revocation, alumni record</div></div>
+        <div class="phase-dur">0.5 weeks</div>
+        <div class="phase-status status-seq">After Phase 5</div>
+      </div>
+      <div class="phase-row">
+        <span class="phase-badge badge-7">PHASE 7</span>
+        <div><div class="phase-name">Reporting &amp; Dashboards</div><div class="phase-desc">Utilisation dashboard, student programme reports, SLA views</div></div>
+        <div class="phase-dur">1 week</div>
+        <div class="phase-status status-seq">After Phase 6</div>
+      </div>
+    </div>
+    <div class="slide-num">07 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 8: MATCHING RULES ══ -->
+  <div class="slide slide-content">
+    <div class="slide-header">
+      <div class="slide-label">Phase 4 Deep Dive</div>
+      <h2 class="slide-title">Volunteer Matching <em>Safety Rules</em></h2>
+    </div>
+    <div class="three-col">
+      <div class="card teal">
+        <div class="card-icon">📍</div>
+        <div class="card-title">Proximity Matching</div>
+        <div class="card-body">
+          Volunteer addresses are geocoded. The system sorts potential volunteers nearest-first to the caregiver's location.
+          Volunteers beyond a configurable radius are excluded unless manually added.
+          Student volunteers included when they meet distance rules.
+        </div>
+      </div>
+      <div class="card red">
+        <div class="card-icon">⚖️</div>
+        <div class="card-title">Gender Safety Pairing</div>
+        <div class="card-body">
+          If a female caregiver or children are present in the home, the system blocks a 2-male pairing.
+          Valid pairings: Male + Female, or Female + Female.
+          Coordinator can override with a mandatory justification note stored for audit.
+        </div>
+      </div>
+      <div class="card gold">
+        <div class="card-icon">🚗</div>
+        <div class="card-title">Driving Capability</div>
+        <div class="card-body">
+          For caregivers beyond transit distance, the system requires at least 1 volunteer with Drives = Yes.
+          Assigning 2 non-driving volunteers to a far-distance case is blocked with a clear error.
+          Drives field stored on every volunteer Contact.
+        </div>
+      </div>
+      <div class="card purple">
+        <div class="card-icon">🛠️</div>
+        <div class="card-title">Skills Matching</div>
+        <div class="card-body">
+          Volunteers tagged with skills: Meal Prep, Laundry, Housekeeping, Mental Health Support, Outreach, Admin.
+          System filters by skills required for the caregiver's support request.
+          Partial match shows with a warning — coordinator decides.
+        </div>
+      </div>
+      <div class="card orange">
+        <div class="card-icon">⭐</div>
+        <div class="card-title">Top 3 Recommendations</div>
+        <div class="card-body">
+          After filters applied, system shows top 3 recommended volunteer pairings with a score.
+          Pairings that violate any mandatory rule are flagged with warning icons — not hidden.
+        </div>
+      </div>
+      <div class="card teal">
+        <div class="card-icon">🔁</div>
+        <div class="card-title">Cancellation Handling</div>
+        <div class="card-body">
+          Caregiver cancels: Case rescheduled, shift cancelled, volunteers notified.
+          Volunteer cancels: System suggests replacement from available pool.
+          All cancellations logged on the Case for audit and reporting.
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">08 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 9: STUDENT LIFECYCLE ══ -->
+  <div class="slide slide-alt">
+    <div class="slide-header">
+      <div class="slide-label">Student Volunteer Journey</div>
+      <h2 class="slide-title">From <em>School Submission</em> to Exit</h2>
+    </div>
+    <div style="display:flex;gap:0;align-items:stretch;overflow-x:auto;">
+      <!-- Lifecycle steps -->
+      <div style="flex:1;min-width:120px;padding:20px 16px;background:white;border-radius:12px 0 0 12px;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">🏫</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--brand);margin-bottom:8px;">STEP 1</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">School Submission</div>
+        <div style="font-size:11px;color:var(--light-slate);line-height:1.5;">Resume + cover letter received from school</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;background:var(--cream);color:var(--brand);font-size:20px;font-weight:700;">→</div>
+      <div style="flex:1;min-width:120px;padding:20px 16px;background:white;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">🎤</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--brand);margin-bottom:8px;">STEP 2</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Interview</div>
+        <div style="font-size:11px;color:var(--light-slate);line-height:1.5;">Scheduled &amp; logged in Salesforce</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;background:var(--cream);color:var(--brand);font-size:20px;font-weight:700;">→</div>
+      <div style="flex:1;min-width:120px;padding:20px 16px;background:white;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">📄</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--brand);margin-bottom:8px;">STEP 3</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Document Check</div>
+        <div style="font-size:11px;color:var(--light-slate);line-height:1.5;">VSC, CPR, CPI, Immunisation — all tracked</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;background:var(--cream);color:var(--brand);font-size:20px;font-weight:700;">→</div>
+      <div style="flex:1;min-width:120px;padding:20px 16px;background:white;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">📝</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--teal);margin-bottom:8px;">STEP 4</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Agreement</div>
+        <div style="font-size:11px;color:var(--light-slate);line-height:1.5;">Service agreement generated &amp; signed</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;background:var(--cream);color:var(--brand);font-size:20px;font-weight:700;">→</div>
+      <div style="flex:1;min-width:120px;padding:20px 16px;background:white;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">🎓</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--teal);margin-bottom:8px;">STEP 5</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Onboarding</div>
+        <div style="font-size:11px;color:var(--light-slate);line-height:1.5;">2–3 weeks orientation + checklist</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;background:var(--cream);color:var(--brand);font-size:20px;font-weight:700;">→</div>
+      <div style="flex:1;min-width:120px;padding:20px 16px;background:white;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">🏠</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold);margin-bottom:8px;">STEP 6</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Active Placement</div>
+        <div style="font-size:11px;color:var(--light-slate);line-height:1.5;">Tasks, visits, reports, weekly meetings</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;background:var(--cream);color:var(--brand);font-size:20px;font-weight:700;">→</div>
+      <div style="flex:1;min-width:120px;padding:20px 16px;background:white;border-radius:0 12px 12px 0;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:28px;margin-bottom:8px;">🚀</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--purple);margin-bottom:8px;">STEP 7</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Exit Decision</div>
+        <div style="font-size:11px;color:var(--light-slate);line-height:1.5;">Stay as general volunteer or end placement</div>
+      </div>
+    </div>
+    <div style="margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="padding:16px 20px;background:white;border-radius:12px;border-left:3px solid var(--teal);font-size:13px;color:var(--slate);">
+        <strong style="color:var(--deep);">Basic Students (PSW, CDSW, DSW):</strong> In-home tasks — laundry, meal prep, housekeeping, errands
+      </div>
+      <div style="padding:16px 20px;background:white;border-radius:12px;border-left:3px solid var(--purple);font-size:13px;color:var(--slate);">
+        <strong style="color:var(--deep);">Advanced Students (BSW, MSW, AMH):</strong> Emotional well-being oversight, supervision, referral escalation
+      </div>
+    </div>
+    <div class="slide-num">09 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 10: GATE APPROACH ══ -->
+  <div class="slide slide-content">
+    <div class="slide-header">
+      <div class="slide-label">Quality Assurance</div>
+      <h2 class="slide-title">The <em>Gated Approach</em> — How It Works</h2>
+    </div>
+    <div class="two-col">
+      <div>
+        <p style="font-size:15px;color:var(--slate);line-height:1.7;margin-bottom:24px;">
+          Nothing moves to the next phase until the current gate is confirmed. This protects Phase 1 (already live)
+          and ensures every build step is validated before we layer on complexity.
+        </p>
+        <div class="gate-list">
+          <div class="gate-item">
+            <div class="gate-check">1</div>
+            <div>Built and tested <strong>in sandbox</strong> by developer</div>
+          </div>
+          <div class="gate-item">
+            <div class="gate-check">2</div>
+            <div>BA tests against <strong>all Jira acceptance criteria</strong></div>
+          </div>
+          <div class="gate-item">
+            <div class="gate-check">3</div>
+            <div>Client (Abigail) <strong>reviews and confirms</strong> — user acceptance testing</div>
+          </div>
+          <div class="gate-item">
+            <div class="gate-check">4</div>
+            <div>Regression check: <strong>Phase 1 still works</strong> (no broken cases)</div>
+          </div>
+          <div class="gate-item">
+            <div class="gate-check">5</div>
+            <div>Moved to <strong>production</strong> — gate closed ✅</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="background:var(--cream);border-radius:16px;padding:28px;">
+          <div style="font-size:13px;font-weight:600;color:var(--deep);margin-bottom:20px;">Roles &amp; Responsibilities</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="padding:12px 16px;background:white;border-radius:10px;">
+              <div style="font-size:12px;font-weight:700;color:var(--brand);margin-bottom:4px;">BA Team (Taiwo, BC)</div>
+              <div style="font-size:13px;color:var(--slate);">Story refinement, UAT, client communication, gate sign-off</div>
+            </div>
+            <div style="padding:12px 16px;background:white;border-radius:10px;">
+              <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:4px;">Developer Team (Ital + team)</div>
+              <div style="font-size:13px;color:var(--slate);">Flow builds, custom objects, validation rules, automation</div>
+            </div>
+            <div style="padding:12px 16px;background:white;border-radius:10px;">
+              <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px;">Client — Abigail / Hearts &amp; Mind</div>
+              <div style="font-size:13px;color:var(--slate);">UAT sign-off at each gate, email template content, process verification</div>
+            </div>
+            <div style="padding:12px 16px;background:white;border-radius:10px;">
+              <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:4px;">Project Manager</div>
+              <div style="font-size:13px;color:var(--slate);">Gate tracking, sprint planning, risk management</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">10 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 11: NEXT STEPS ══ -->
+  <div class="slide slide-alt">
+    <div class="slide-header">
+      <div class="slide-label">Immediate Actions</div>
+      <h2 class="slide-title">Next Steps — <em>Starting This Week</em></h2>
+    </div>
+    <div class="three-col">
+      <div class="card red">
+        <div class="card-icon">🏗️</div>
+        <div class="card-title">Phase 0 Begins</div>
+        <div class="card-body">
+          Developer team creates Contact Record Types (Student Volunteer + General Volunteer) and the Student Placement custom object with all fields in <strong>sandbox</strong>.
+          <br><br>
+          <strong>Target: End of this week</strong>
+        </div>
+      </div>
+      <div class="card teal">
+        <div class="card-icon">✅</div>
+        <div class="card-title">Client: Confirm Fields</div>
+        <div class="card-body">
+          Abigail to review the proposed Student Placement fields list and confirm:
+          <br>• All 5 compliance documents are correct
+          <br>• Programme list (PSW, CDSW, BSW etc.) is accurate
+          <br>• Any additional fields needed
+          <br><br>
+          <strong>By: Next session</strong>
+        </div>
+      </div>
+      <div class="card gold">
+        <div class="card-icon">📋</div>
+        <div class="card-title">BA: User Stories</div>
+        <div class="card-body">
+          BAs to refine user stories for Phase 0 and Phase 1 sprints — ensuring acceptance criteria are ready for developer handoff.
+          <br><br>
+          Stories to focus on:
+          <br>• HMP-70 (School submission)
+          <br>• HMP-72 (Interview workflow)
+          <br><br>
+          <strong>By: End of week</strong>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:24px;padding:20px 24px;background:white;border-radius:14px;border:2px solid var(--teal);display:flex;align-items:center;gap:16px;">
+      <div style="font-size:32px;">🔒</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--deep);margin-bottom:4px;">Gate 0 Condition — Before Phase 1 starts</div>
+        <div style="font-size:13px;color:var(--slate);">Both Contact record types visible in sandbox + Student Placement object creatable with all fields. Confirmed by BA and client. ✅</div>
+      </div>
+    </div>
+    <div class="slide-num">11 / 12</div>
+  </div>
+
+  <!-- ══ SLIDE 12: CLOSE ══ -->
+  <div class="slide slide-close">
+    <h2 class="close-title">Let's Build<br><span>Hearts &amp; Mind</span><br>the Right Way.</h2>
+    <p class="close-sub">
+      Phase 2 replaces manual coordination with a reliable, auditable, and scalable Salesforce system —
+      so coordinators can focus on people, not paperwork.
+    </p>
+    <div class="close-tags">
+      <div class="close-tag">✅ Phase 1 Protected</div>
+      <div class="close-tag">🎓 Student-First Design</div>
+      <div class="close-tag">🔒 Gated Delivery</div>
+      <div class="close-tag">📊 V4S + PMM Together</div>
+      <div class="close-tag">~9 Weeks</div>
+    </div>
+    <div style="margin-top:48px;font-size:13px;color:rgba(245,240,232,0.3);letter-spacing:1px;">
+      Cloud Deck Inc. · Hearts and Mind · April 2026
+    </div>
+    <div class="slide-num" style="color:rgba(253,250,244,0.2);">12 / 12</div>
+  </div>
+
+</div>
+</body>
+</html>
