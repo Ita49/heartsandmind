@@ -1,0 +1,1556 @@
+<title>Hearts &amp; Mind | Salesforce Implementation Process Flows</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --purple: #4f1f63;
+    --purple-dark: #2d1040;
+    --purple-soft: #8b5fa3;
+    --gold: #f5a623;
+    --white: #ffffff;
+    --grey: #6b6b76;
+    --light-grey: #f7f3f9;
+    --green: #2f8f5b;
+    --red: #b0433f;
+    --sidebar-width: 260px;
+    --header-height: 68px;
+    --footer-height: 52px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--white);
+    color: #222;
+  }
+
+  /* ---------- Header ---------- */
+  header.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    background: var(--purple);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 200;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .brand-name {
+    color: var(--gold);
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: 0.3px;
+  }
+
+  .brand-sub {
+    color: var(--white);
+    font-size: 0.85rem;
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  .header-right {
+    color: var(--white);
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    margin-right: 8px;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 24px;
+    height: 3px;
+    background: var(--gold);
+    margin: 4px 0;
+    border-radius: 2px;
+  }
+
+  /* ---------- Layout ---------- */
+  .app-shell {
+    display: flex;
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  }
+
+  /* ---------- Sidebar ---------- */
+  nav.sidebar {
+    position: fixed;
+    top: var(--header-height);
+    bottom: var(--footer-height);
+    left: 0;
+    width: var(--sidebar-width);
+    background: var(--purple-dark);
+    padding: 24px 0;
+    overflow-y: auto;
+    z-index: 150;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-title {
+    color: var(--gold);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 0 24px 16px;
+    margin: 0;
+  }
+
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 24px;
+    color: #d8c8e2;
+    cursor: pointer;
+    font-size: 0.92rem;
+    border-left: 4px solid transparent;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .nav-item .nav-icon {
+    font-size: 1rem;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .nav-item:hover {
+    background: rgba(245, 166, 35, 0.12);
+    color: var(--white);
+  }
+
+  .nav-item.active {
+    background: var(--gold);
+    color: var(--purple-dark);
+    font-weight: 700;
+    border-left-color: var(--white);
+  }
+
+  /* ---------- Main content ---------- */
+  main.content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    background: var(--white);
+    padding: 40px 48px 60px;
+    width: calc(100% - var(--sidebar-width));
+  }
+
+  .flow-panel {
+    max-width: 1220px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .flow-panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .flow-title {
+    color: var(--purple);
+    font-weight: 800;
+    font-size: 1.9rem;
+    margin: 0 0 8px;
+  }
+
+  .flow-description {
+    color: var(--grey);
+    font-size: 1rem;
+    margin: 0 0 18px;
+    max-width: 760px;
+    line-height: 1.5;
+  }
+
+  /* ---------- Legend + toolbar ---------- */
+  .diagram-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 0.74rem;
+    color: var(--grey);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-swatch {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--gold);
+  }
+
+  .legend-swatch.process { background: var(--purple); border-radius: 3px; }
+  .legend-swatch.decision { background: var(--gold); border-radius: 2px; transform: rotate(45deg); }
+  .legend-swatch.success { background: var(--green); border-radius: 50%; }
+  .legend-swatch.reject { background: var(--red); border-radius: 50%; }
+
+  .icon-toolbar {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1.5px solid var(--purple);
+    color: var(--purple);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+    opacity: 0.72;
+  }
+
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  .icon-btn:hover {
+    opacity: 1;
+    background: var(--purple);
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  .icon-btn:active { transform: scale(0.94); }
+
+  .icon-btn .icon-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--purple-dark);
+    color: var(--gold);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
+  .icon-btn:hover .icon-tooltip { opacity: 1; }
+  .icon-btn .icon-tooltip.persist { opacity: 1; }
+
+  /* ---------- Swimlane diagram card ---------- */
+  .swimlane-card {
+    border: 1px solid #e8e0ee;
+    border-radius: 12px;
+    background: var(--white);
+    box-shadow: 0 6px 22px rgba(79, 31, 99, 0.08);
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+
+  .swimlane-body {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .lane-labels {
+    flex: 0 0 148px;
+    border-right: 2px solid #ece3f2;
+    background: #fbf8fd;
+  }
+
+  .lane-label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-bottom: 1px solid #ece3f2;
+    font-weight: 700;
+    font-size: 0.76rem;
+    color: var(--purple);
+    border-left: 4px solid transparent;
+  }
+
+  .lane-label-row:last-child { border-bottom: none; }
+
+  .lane-label-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .diagram-scroll {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background:
+      radial-gradient(ellipse at top right, rgba(245,166,35,0.06), transparent 60%),
+      var(--white);
+  }
+
+  .diagram-scroll svg { display: block; }
+
+  .flow-node { cursor: pointer; outline: none; }
+
+  .flow-node .node-shape {
+    transition: filter 0.2s ease, transform 0.2s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .flow-node:hover .node-shape,
+  .flow-node:focus .node-shape {
+    filter: drop-shadow(0 8px 16px rgba(79, 31, 99, 0.38));
+    transform: scale(1.035);
+  }
+
+  .flow-node .node-hint {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .flow-node:hover .node-hint,
+  .flow-node:focus .node-hint {
+    opacity: 1;
+  }
+
+  @keyframes nodeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .node-anim {
+    animation: nodeIn 0.5s ease both;
+    transform-box: fill-box;
+  }
+
+  /* ---------- Node detail modal ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 16, 64, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: 500;
+  }
+
+  .modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background: var(--white);
+    max-width: 480px;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+    transform: translateY(14px) scale(0.98);
+    transition: transform 0.25s ease;
+  }
+
+  .modal-overlay.show .modal-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-header {
+    background: var(--purple);
+    color: var(--white);
+    padding: 20px 22px 16px;
+    position: relative;
+  }
+
+  .modal-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--gold);
+    color: var(--purple-dark);
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0;
+    padding-right: 26px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--gold);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .modal-close:hover { color: var(--white); }
+
+  .modal-body {
+    padding: 20px 22px 8px;
+    color: #333;
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px 20px;
+    gap: 10px;
+  }
+
+  .modal-nav-btn {
+    background: none;
+    border: 1.5px solid var(--purple);
+    color: var(--purple);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .modal-nav-btn:hover:not(:disabled) {
+    background: var(--purple);
+    color: var(--gold);
+  }
+
+  .modal-nav-btn:disabled {
+    opacity: 0.32;
+    cursor: default;
+  }
+
+  .modal-step-count {
+    font-size: 0.72rem;
+    color: var(--grey);
+    font-weight: 600;
+  }
+
+  /* ---------- Footer ---------- */
+  footer.site-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--footer-height);
+    background: var(--purple);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    z-index: 200;
+  }
+
+  /* ---------- Overlay for mobile ---------- */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 140;
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px) {
+    .hamburger {
+      display: block;
+    }
+
+    nav.sidebar {
+      transform: translateX(-100%);
+      box-shadow: 4px 0 16px rgba(0,0,0,0.25);
+    }
+
+    nav.sidebar.open {
+      transform: translateX(0);
+    }
+
+    main.content {
+      margin-left: 0;
+      width: 100%;
+      padding: 28px 20px 60px;
+    }
+
+    .header-right {
+      display: none;
+    }
+
+    .flow-title {
+      font-size: 1.5rem;
+    }
+
+    .lane-labels {
+      flex-basis: 104px;
+    }
+
+    .lane-label-row {
+      font-size: 0.66rem;
+      padding: 0 8px;
+    }
+  }
+</style>
+
+<header class="site-header">
+  <div class="header-left">
+    <button class="hamburger" id="hamburgerBtn" aria-label="Toggle navigation">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <span class="brand-name">Hearts &amp; Mind</span>
+    <span class="brand-sub">Salesforce Implementation</span>
+  </div>
+  <div class="header-right" id="currentDate"></div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar">
+    <p class="sidebar-title">Process Flows</p>
+    <ul class="nav-list" id="navList"></ul>
+  </nav>
+
+  <main class="content">
+    <div class="flow-panel" id="flowPanel">
+      <h1 class="flow-title" id="flowTitle"></h1>
+      <p class="flow-description" id="flowDescription"></p>
+
+      <div class="diagram-toolbar">
+        <div class="legend">
+          <span class="legend-item"><span class="legend-swatch process"></span>Process step</span>
+          <span class="legend-item"><span class="legend-swatch decision"></span>Decision</span>
+          <span class="legend-item"><span class="legend-swatch success"></span>Positive outcome</span>
+          <span class="legend-item"><span class="legend-swatch reject"></span>Negative outcome</span>
+          <span class="legend-item">Click any step for details</span>
+        </div>
+        <div class="icon-toolbar">
+          <button class="icon-btn" id="exportPngBtn" type="button">
+            <span class="icon-tooltip" id="exportTooltip">Export as PNG</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="icon-btn" id="copyCodeBtn" type="button">
+            <span class="icon-tooltip" id="copyTooltip">Copy Mermaid Code</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="swimlane-card">
+        <div class="swimlane-body">
+          <div class="lane-labels" id="laneLabels"></div>
+          <div class="diagram-scroll" id="diagramScroll"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  Hearts &amp; Mind Salesforce Implementation &copy; 2026 | Built by Cloud Deck Inc.
+</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+      <span class="modal-role" id="modalRole"></span>
+      <h2 class="modal-title" id="modalTitle"></h2>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="modal-nav-btn" id="modalPrev">&larr; Previous step</button>
+      <span class="modal-step-count" id="modalStepCount"></span>
+      <button class="modal-nav-btn" id="modalNext">Next step &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  // Each flow keeps its original Mermaid source (used only by "Copy Mermaid
+  // Code") separate from the swimlane data used to render the custom diagram.
+  const flows = [
+    {
+      id: 'general-volunteer-intake',
+      icon: '&#128100;',
+      title: 'General Volunteer Intake',
+      description: 'End-to-end process for onboarding general volunteers via the website or Charity Village.',
+      mermaidCode: `flowchart LR
+  A([Potential Volunteer via Website or Charity Village]) --> B[Submits Volunteer Form]
+  B --> C[Salesforce: Contact Created - General Vlunteer Record Type]
+  C --> D[Coordinator Notified - Application Reviewed]
+  D --> E{Role Requires Home Visit?}
+  E -- Event Support Only --> F[Volunteer Status Active]
+  E -- Yes --> G[Request VSC and Compliance Documents]
+  G --> H[Proceed to Interview]
+  H --> I{Suitable?}
+  I -- No --> J[Reject Email Sent]
+  I -- Yes --> F`,
+      lanes: [
+        { id: 'applicant', label: 'Volunteer Applicant', icon: '\u{1F464}', accent: '#f5a623' },
+        { id: 'coordinator', label: 'Coordinator', icon: '\u{1F9D1}‍\u{1F4BC}', accent: '#4f1f63' },
+        { id: 'system', label: 'Salesforce System', icon: '☁️', accent: '#8b5fa3' }
+      ],
+      nodes: [
+        { id: 'A', lane: 'applicant', type: 'start', label: 'Potential Volunteer via Website or Charity Village', detail: 'A prospective general volunteer discovers Hearts & Mind through the public website or a Charity Village listing and decides to apply.' },
+        { id: 'B', lane: 'applicant', type: 'process', label: 'Submits Volunteer Form', detail: 'The volunteer completes the V4S web intake form: name, contact details, interested role, availability, and whether they drive (Jira HMP-113).' },
+        { id: 'C', lane: 'system', type: 'process', label: 'Salesforce: Contact Created - General Vlunteer Record Type', detail: 'V4S automatically creates a Contact with Record Type = General Volunteer and sends an acknowledgement email. A task is created for the coordinator to review the application.' },
+        { id: 'D', lane: 'coordinator', type: 'process', label: 'Coordinator Notified - Application Reviewed', detail: 'The coordinator receives the review task and reads the application to judge fit for currently available roles.' },
+        { id: 'E', lane: 'coordinator', type: 'decision', label: 'Role Requires Home Visit?', detail: 'The coordinator checks whether the role involves in-home caregiver support, which carries a higher compliance bar than event support only.' },
+        { id: 'F', lane: 'system', type: 'success', label: 'Volunteer Status Active', detail: "Volunteer_Status__c is set to Active and the record becomes eligible for the matching and assignment flow." },
+        { id: 'G', lane: 'coordinator', type: 'process', label: 'Request VSC and Compliance Documents', detail: 'For home-visit roles, the coordinator requests a Vulnerable Sector Check and any other compliance documents before proceeding.' },
+        { id: 'H', lane: 'coordinator', type: 'process', label: 'Proceed to Interview', detail: 'An informal interview (phone or video) is scheduled to confirm skills, availability, and fit for the role.' },
+        { id: 'I', lane: 'coordinator', type: 'decision', label: 'Suitable?', detail: 'The coordinator makes a go / no-go decision based on the interview and any compliance documents submitted.' },
+        { id: 'J', lane: 'system', type: 'reject', label: 'Reject Email Sent', detail: 'An automated regret email is sent to the applicant and the record is marked as not proceeding.' }
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C' },
+        { from: 'C', to: 'D' },
+        { from: 'D', to: 'E' },
+        { from: 'E', to: 'F', label: 'Event Support Only' },
+        { from: 'E', to: 'G', label: 'Yes' },
+        { from: 'G', to: 'H' },
+        { from: 'H', to: 'I' },
+        { from: 'I', to: 'J', label: 'No' },
+        { from: 'I', to: 'F', label: 'Yes' }
+      ]
+    },
+    {
+      id: 'student-volunteer-intake',
+      icon: '&#127891;',
+      title: 'Student Volunteer Intake',
+      description: 'Process for onboarding student volunteers referred by academic institutions.',
+      mermaidCode: `flowchart LR
+  A([School or Student Reaches Out]) --> B{Who Made Contact?}
+  B -- Student --> C[Redirect Student Back to School]
+  B -- School --> D[School Submits All Required Documents]
+  D --> E[Salesforce: Contact Created - Student Volunteer Record Type]
+  E --> F[Coordinator Reviews]
+  F --> G{Suitable?}
+  G -- Not Suitable --> H[Regret Email Sent to School]
+  G -- Suitable --> I[Schedule Interview via Google Meet]
+  I --> J{Interview Outcome}
+  J -- Not a Fit --> H
+  J -- Good --> K{All Compliant Documents OK and Placement Agreement?}
+  K -- Not a Fit --> H
+  K -- Good Fit --> L[Documents Verified - Ready for Onboarding]`,
+      lanes: [
+        { id: 'school', label: 'School / Student', icon: '\u{1F3EB}', accent: '#f5a623' },
+        { id: 'coordinator', label: 'Coordinator', icon: '\u{1F9D1}‍\u{1F4BC}', accent: '#4f1f63' },
+        { id: 'system', label: 'Salesforce System', icon: '☁️', accent: '#8b5fa3' }
+      ],
+      nodes: [
+        { id: 'A', lane: 'school', type: 'start', label: 'School or Student Reaches Out', detail: 'Contact is initiated either by an academic institution placing a student, or by a student reaching out directly.' },
+        { id: 'B', lane: 'school', type: 'decision', label: 'Who Made Contact?', detail: 'Hearts & Mind determines whether the enquiry came from the school (formal channel) or the student themselves (informal).' },
+        { id: 'C', lane: 'coordinator', type: 'neutral', label: 'Redirect Student Back to School', detail: 'Students cannot self-refer. Only school-submitted placements are accepted, so the student is redirected to apply through their placement office.' },
+        { id: 'D', lane: 'school', type: 'process', label: 'School Submits All Required Documents', detail: "The school formally submits the student along with a resume and cover letter, kicking off the Web-to-Lead capture (Jira HMP-70)." },
+        { id: 'E', lane: 'system', type: 'process', label: 'Salesforce: Contact Created - Student Volunteer Record Type', detail: 'The Lead-to-Contact flow converts the submission into a Contact with Record Type = Student Volunteer and creates a linked Student_Placement__c record.' },
+        { id: 'F', lane: 'coordinator', type: 'process', label: 'Coordinator Reviews', detail: 'The coordinator reviews the placement request, programme (PSW / CDSW / DSW / BSW / MSW), and submitted materials.' },
+        { id: 'G', lane: 'coordinator', type: 'decision', label: 'Suitable?', detail: 'An initial suitability screen determines whether the placement proceeds to interview.' },
+        { id: 'H', lane: 'system', type: 'reject', label: 'Regret Email Sent to School', detail: 'A regret notification is sent back to the school and the placement is marked not proceeding.' },
+        { id: 'I', lane: 'coordinator', type: 'process', label: 'Schedule Interview via Google Meet', detail: 'An interview is booked; the meeting link and date are logged on Interview_Date__c (Step 1.3 of the implementation plan).' },
+        { id: 'J', lane: 'coordinator', type: 'decision', label: 'Interview Outcome', detail: 'The coordinator records whether the candidate is a fit following the interview.' },
+        { id: 'K', lane: 'coordinator', type: 'decision', label: 'All Compliant Documents OK and Placement Agreement?', detail: 'The five compliance documents (VSC, immunisation, CPR, CPI, resume/cover letter) and the signed placement agreement are checked off (Step 1.4).' },
+        { id: 'L', lane: 'system', type: 'success', label: 'Documents Verified - Ready for Onboarding', detail: "Once every check passes, Documents_Verified__c is set true and Placement_Status__c moves to 'Verified – Ready for Onboarding'." }
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C', label: 'Student' },
+        { from: 'B', to: 'D', label: 'School' },
+        { from: 'D', to: 'E' },
+        { from: 'E', to: 'F' },
+        { from: 'F', to: 'G' },
+        { from: 'G', to: 'H', label: 'Not Suitable' },
+        { from: 'G', to: 'I', label: 'Suitable' },
+        { from: 'I', to: 'J' },
+        { from: 'J', to: 'H', label: 'Not a Fit' },
+        { from: 'J', to: 'K', label: 'Good' },
+        { from: 'K', to: 'H', label: 'Not a Fit' },
+        { from: 'K', to: 'L', label: 'Good Fit' }
+      ]
+    },
+    {
+      id: 'home-visit-feedback',
+      icon: '&#127968;',
+      title: 'Home Visit and Feedback Flow',
+      description: 'How support requests are assigned, matched and executed by volunteers.',
+      mermaidCode: `flowchart LR
+  A([Active Support Request]) --> B[Coordinator Opens Request and Assigns]
+  B --> C[System Filters Available Volunteers]
+  C --> D{Meets Matching Criteria?}
+  D -- No --> E[Manual Assignment by Coordinator]
+  E --> F[Warning Flagged - Override Note Required]
+  D -- Yes --> G[Coordinator Selects Volunteer]
+  F --> G
+  G --> H[Coordinator Creates V4S Shift]
+  H --> I[Notification Sent Out]`,
+      lanes: [
+        { id: 'coordinator', label: 'Coordinator', icon: '\u{1F9D1}‍\u{1F4BC}', accent: '#4f1f63' },
+        { id: 'system', label: 'Salesforce / V4S System', icon: '☁️', accent: '#8b5fa3' }
+      ],
+      nodes: [
+        { id: 'A', lane: 'system', type: 'start', label: 'Active Support Request', detail: 'A caregiver support request (Case) from the Phase 1 intake is open and awaiting a volunteer assignment.' },
+        { id: 'B', lane: 'coordinator', type: 'process', label: 'Coordinator Opens Request and Assigns', detail: 'The coordinator opens the Case and clicks Assign Volunteers to begin matching (Jira HMP-85).' },
+        { id: 'C', lane: 'system', type: 'process', label: 'System Filters Available Volunteers', detail: 'Salesforce filters volunteers by status, availability, and proximity to the caregiver (Jira HMP-71).' },
+        { id: 'D', lane: 'system', type: 'decision', label: 'Meets Matching Criteria?', detail: 'The system checks safety and logistics rules: gender-safe pairing (HMP-81) and driving capability for distant households (HMP-76).' },
+        { id: 'E', lane: 'coordinator', type: 'process', label: 'Manual Assignment by Coordinator', detail: 'When no volunteer cleanly satisfies the matching rules, the coordinator manually selects a pairing.' },
+        { id: 'F', lane: 'system', type: 'process', label: 'Warning Flagged - Override Note Required', detail: 'A manual override is logged with a mandatory note explaining the exception, preserving an audit trail.' },
+        { id: 'G', lane: 'coordinator', type: 'process', label: 'Coordinator Selects Volunteer', detail: 'The coordinator confirms 1–3 volunteers for the visit from the recommended or overridden list.' },
+        { id: 'H', lane: 'coordinator', type: 'process', label: 'Coordinator Creates V4S Shift', detail: 'A GW_Volunteers__Volunteer_Shift__c record is created under the relevant Volunteer Job and linked to the Case.' },
+        { id: 'I', lane: 'system', type: 'success', label: 'Notification Sent Out', detail: "Confirmation emails go out to assigned volunteers, typically with 48 hours' notice ahead of the visit." }
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C' },
+        { from: 'C', to: 'D' },
+        { from: 'D', to: 'E', label: 'No' },
+        { from: 'E', to: 'F' },
+        { from: 'D', to: 'G', label: 'Yes' },
+        { from: 'F', to: 'G' },
+        { from: 'G', to: 'H' },
+        { from: 'H', to: 'I' }
+      ]
+    },
+    {
+      id: 'cancellation-reassignment',
+      icon: '&#128260;',
+      title: 'Cancellation and Reassignment',
+      description: 'Handling last minute cancellations from caregivers or volunteers and reassigning visits.',
+      mermaidCode: `flowchart LR
+  A([Cancellation Request]) --> B{Who Cancelled?}
+  B -- Caregiver --> C[System Alert Sent to Coordinator]
+  B -- Volunteer --> D[System Alert Sent to Coordinator]
+  C --> E{How Much Notice?}
+  D --> E
+  E -- More than 24hrs --> F{Replacement Available?}
+  E -- Less than 24hrs --> G[Last Minute Cancel - Team Notified]
+  F -- Yes --> H[Matching and Assignment Flow]
+  H --> I[New Assignment Created - Email Sent to Replacement]
+  I --> J[Notify Caregiver and Reschedule]
+  F -- No --> K[Schedule New Visit - New Shift in V4S]
+  G --> L[Shift Cancelled - Volunteer Notified - Case Rescheduled]`,
+      lanes: [
+        { id: 'initiator', label: 'Caregiver / Volunteer', icon: '\u{1F64B}', accent: '#f5a623' },
+        { id: 'coordinator', label: 'Coordinator', icon: '\u{1F9D1}‍\u{1F4BC}', accent: '#4f1f63' },
+        { id: 'system', label: 'Salesforce System', icon: '☁️', accent: '#8b5fa3' }
+      ],
+      nodes: [
+        { id: 'A', lane: 'initiator', type: 'start', label: 'Cancellation Request', detail: 'Either the caregiver or an assigned volunteer needs to cancel an upcoming visit.' },
+        { id: 'B', lane: 'initiator', type: 'decision', label: 'Who Cancelled?', detail: 'The system routes the cancellation differently depending on who initiated it.' },
+        { id: 'C', lane: 'system', type: 'process', label: 'System Alert Sent to Coordinator', detail: 'A caregiver-initiated cancellation triggers an immediate alert to the coordinator.' },
+        { id: 'D', lane: 'system', type: 'process', label: 'System Alert Sent to Coordinator', detail: 'A volunteer-initiated cancellation triggers the same alert path so the shift can be covered.' },
+        { id: 'E', lane: 'coordinator', type: 'decision', label: 'How Much Notice?', detail: 'The coordinator checks how much lead time remains before the scheduled visit.' },
+        { id: 'F', lane: 'coordinator', type: 'decision', label: 'Replacement Available?', detail: 'With more than 24 hours notice, the coordinator checks whether a replacement volunteer can be matched in time.' },
+        { id: 'G', lane: 'system', type: 'process', label: 'Last Minute Cancel - Team Notified', detail: 'With under 24 hours notice, the case is flagged Last-Minute Cancel and the team is alerted immediately (Jira HMP-86).' },
+        { id: 'H', lane: 'coordinator', type: 'process', label: 'Matching and Assignment Flow', detail: 'The standard matching flow (see Home Visit and Feedback Flow) is re-run to find a replacement volunteer.' },
+        { id: 'I', lane: 'system', type: 'process', label: 'New Assignment Created - Email Sent to Replacement', detail: 'A new V4S shift assignment is created and the replacement volunteer receives a confirmation email.' },
+        { id: 'J', lane: 'coordinator', type: 'process', label: 'Notify Caregiver and Reschedule', detail: 'The caregiver is informed of the replacement and the visit is confirmed.' },
+        { id: 'K', lane: 'coordinator', type: 'process', label: 'Schedule New Visit - New Shift in V4S', detail: 'When no replacement is available in time, a new visit is scheduled and a fresh V4S shift is created.' },
+        { id: 'L', lane: 'system', type: 'process', label: 'Shift Cancelled - Volunteer Notified - Case Rescheduled', detail: 'The original shift is cancelled, the volunteer is notified, and the Case is updated to reflect the reschedule.' }
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C', label: 'Caregiver' },
+        { from: 'B', to: 'D', label: 'Volunteer' },
+        { from: 'C', to: 'E' },
+        { from: 'D', to: 'E' },
+        { from: 'E', to: 'F', label: 'More than 24hrs' },
+        { from: 'E', to: 'G', label: 'Less than 24hrs' },
+        { from: 'F', to: 'H', label: 'Yes' },
+        { from: 'H', to: 'I' },
+        { from: 'I', to: 'J' },
+        { from: 'F', to: 'K', label: 'No' },
+        { from: 'G', to: 'L' }
+      ]
+    },
+    {
+      id: 'student-exit-transition',
+      icon: '&#128203;',
+      title: 'Student Exit and Transition Workflow',
+      description: 'Process for closing a student placement and transitioning them to general volunteer status.',
+      mermaidCode: `flowchart LR
+  A([Placement End or Date Approaching]) --> B{Student Continues as Volunteer?}
+  B -- No --> C[Exit - Status set to Exited]
+  B -- Yes --> D[Converted to General Volunteer]
+  D --> E[Access Reviewed and Permissions Updated]
+  C --> F[School Timesheet Submitted]
+  F --> G[Coordinator Signs Evaluation]
+  G --> H[Evaluation Stored in Salesforce]
+  H --> I[Access Revoked]
+  H --> J[Placement and Record Closed]`,
+      lanes: [
+        { id: 'school', label: 'School', icon: '\u{1F3EB}', accent: '#f5a623' },
+        { id: 'coordinator', label: 'Coordinator', icon: '\u{1F9D1}‍\u{1F4BC}', accent: '#4f1f63' },
+        { id: 'system', label: 'Salesforce System', icon: '☁️', accent: '#8b5fa3' }
+      ],
+      nodes: [
+        { id: 'A', lane: 'system', type: 'start', label: 'Placement End or Date Approaching', detail: "Placement_End_Date__c is approaching or has been reached, triggering the exit workflow (Step 6.1)." },
+        { id: 'B', lane: 'coordinator', type: 'decision', label: 'Student Continues as Volunteer?', detail: "The coordinator is prompted to record the student's exit decision: stay on as a volunteer, or end the placement." },
+        { id: 'C', lane: 'system', type: 'process', label: 'Exit - Status set to Exited', detail: 'If the student is not continuing, Volunteer_Status__c is set to Exited.' },
+        { id: 'D', lane: 'system', type: 'success', label: 'Converted to General Volunteer', detail: 'If the student is staying on, the Contact is transitioned to General Volunteer while retaining full placement history.' },
+        { id: 'E', lane: 'coordinator', type: 'process', label: 'Access Reviewed and Permissions Updated', detail: 'Any system access and permission sets are reviewed and updated to reflect the new General Volunteer role.' },
+        { id: 'F', lane: 'school', type: 'process', label: 'School Timesheet Submitted', detail: "The placing school submits the student's final timesheet for the placement period." },
+        { id: 'G', lane: 'coordinator', type: 'process', label: 'Coordinator Signs Evaluation', detail: "The coordinator completes and signs off the student's placement evaluation." },
+        { id: 'H', lane: 'system', type: 'process', label: 'Evaluation Stored in Salesforce', detail: 'The signed evaluation is attached to the Student Placement record and Placement_Status__c is set to Completed.' },
+        { id: 'I', lane: 'system', type: 'process', label: 'Access Revoked', detail: 'Any Salesforce user access is deactivated and the shared outreach email password is rotated per Jira HMP-116.' },
+        { id: 'J', lane: 'system', type: 'process', label: 'Placement and Record Closed', detail: 'The Student_Placement__c record is closed out, completing the lifecycle.' }
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C', label: 'No' },
+        { from: 'B', to: 'D', label: 'Yes' },
+        { from: 'D', to: 'E' },
+        { from: 'C', to: 'F' },
+        { from: 'F', to: 'G' },
+        { from: 'G', to: 'H' },
+        { from: 'H', to: 'I' },
+        { from: 'H', to: 'J' }
+      ]
+    },
+    {
+      id: 'student-intake-automation',
+      icon: '&#9881;',
+      title: 'Student Volunteer Intake - Salesforce Automation Flow',
+      description: 'Behind the scenes Salesforce flow that converts a student Lead into a Contact and links them to their school Account.',
+      mermaidCode: `flowchart LR
+  A([Student fills form]) --> B[Submits via website]
+  B --> C[Web-to-Lead POST to Salesforce]
+  C --> D[Lead created - flow triggers]
+  D --> E{School Account exists?}
+  E -- No --> F[Create school Account]
+  E -- Yes --> G[Use existing Account]
+  F --> H[Create Contact]
+  G --> H
+  H --> I[Student Volunteer record type set]
+  I --> J[Link Contact to school Account]
+  J --> K[Send thank you to student]
+  J --> L[Send notification to school]
+  J --> M[Send alert to coordinator]
+  K --> Z([Process complete])
+  L --> Z
+  M --> Z`,
+      lanes: [
+        { id: 'student', label: 'Student', icon: '\u{1F393}', accent: '#f5a623' },
+        { id: 'system', label: 'Salesforce Automation', icon: '⚙️', accent: '#8b5fa3' }
+      ],
+      nodes: [
+        { id: 'A', lane: 'student', type: 'start', label: 'Student fills form', detail: "A student completes the placement submission form provided by their school's placement office." },
+        { id: 'B', lane: 'student', type: 'process', label: 'Submits via website', detail: 'The form is submitted through the Hearts & Mind Web-to-Lead page.' },
+        { id: 'C', lane: 'system', type: 'process', label: 'Web-to-Lead POST to Salesforce', detail: "The browser posts form data directly to Salesforce's Web-to-Lead endpoint, creating a Lead record." },
+        { id: 'D', lane: 'system', type: 'process', label: 'Lead created - flow triggers', detail: "A record-triggered Flow fires when a Lead with Lead Source = 'Student Placement' is created (Step 1.2)." },
+        { id: 'E', lane: 'system', type: 'decision', label: 'School Account exists?', detail: "The flow checks whether an Account already exists for the student's school." },
+        { id: 'F', lane: 'system', type: 'process', label: 'Create school Account', detail: 'If no matching Account is found, one is created for the school.' },
+        { id: 'G', lane: 'system', type: 'process', label: 'Use existing Account', detail: 'If a matching Account already exists, it is reused to avoid duplicates.' },
+        { id: 'H', lane: 'system', type: 'process', label: 'Create Contact', detail: 'The Lead is converted into a Contact record for the student.' },
+        { id: 'I', lane: 'system', type: 'process', label: 'Student Volunteer record type set', detail: 'The new Contact is assigned Record Type = Student Volunteer, unlocking programme-specific fields.' },
+        { id: 'J', lane: 'system', type: 'process', label: 'Link Contact to school Account', detail: 'The student Contact is related to their school Account for reporting and communication.' },
+        { id: 'K', lane: 'system', type: 'process', label: 'Send thank you to student', detail: "An automated thank-you email confirms receipt of the student's application." },
+        { id: 'L', lane: 'system', type: 'process', label: 'Send notification to school', detail: 'The placing school is notified that the submission was received and processed.' },
+        { id: 'M', lane: 'system', type: 'process', label: 'Send alert to coordinator', detail: 'A task and email alert is sent to the coordinator to begin the manual review stage.' },
+        { id: 'Z', lane: 'system', type: 'success', label: 'Process complete', detail: 'All downstream notifications have been sent. The automated portion of intake is complete and the record awaits coordinator review.' }
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C' },
+        { from: 'C', to: 'D' },
+        { from: 'D', to: 'E' },
+        { from: 'E', to: 'F', label: 'No' },
+        { from: 'E', to: 'G', label: 'Yes' },
+        { from: 'F', to: 'H' },
+        { from: 'G', to: 'H' },
+        { from: 'H', to: 'I' },
+        { from: 'I', to: 'J' },
+        { from: 'J', to: 'K' },
+        { from: 'J', to: 'L' },
+        { from: 'J', to: 'M' },
+        { from: 'K', to: 'Z' },
+        { from: 'L', to: 'Z' },
+        { from: 'M', to: 'Z' }
+      ]
+    }
+  ];
+
+  let currentFlowIndex = 0;
+  let renderToken = 0;
+  let currentModalNodes = [];
+  let currentModalIndex = -1;
+
+  const navList = document.getElementById('navList');
+  const flowPanel = document.getElementById('flowPanel');
+  const flowTitle = document.getElementById('flowTitle');
+  const flowDescription = document.getElementById('flowDescription');
+  const laneLabelsEl = document.getElementById('laneLabels');
+  const diagramScroll = document.getElementById('diagramScroll');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalRole = document.getElementById('modalRole');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalPrev = document.getElementById('modalPrev');
+  const modalNext = document.getElementById('modalNext');
+  const modalStepCount = document.getElementById('modalStepCount');
+  const modalClose = document.getElementById('modalClose');
+
+  function buildNav() {
+    flows.forEach((flow, index) => {
+      const li = document.createElement('li');
+      li.className = 'nav-item' + (index === 0 ? ' active' : '');
+      li.dataset.index = index;
+      li.innerHTML = '<span class="nav-icon">' + flow.icon + '</span><span>' + flow.title + '</span>';
+      li.addEventListener('click', () => selectFlow(index));
+      navList.appendChild(li);
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+   * Swimlane layout engine
+   * Ranks nodes by longest path from a source (Sugiyama-style layering),
+   * places them in their assigned lane, and stacks nodes that collide in
+   * the same (lane, rank) cell into sub-rows.
+   * ------------------------------------------------------------------- */
+  const COL_WIDTH = 340;
+  const MARGIN_LEFT = 50;
+  const MARGIN_RIGHT = 60;
+  const CELL_H = 100;
+  const ROW_GAP = 26;
+  const LANE_V_PAD = 26;
+  const PROCESS_W = 190;
+  const PROCESS_H = 64;
+  const DECISION_W = 200;
+  const DECISION_H = 86;
+
+  function computeLayout(flow) {
+    const { lanes, nodes, edges } = flow;
+    const laneIndex = {};
+    lanes.forEach((l, i) => { laneIndex[l.id] = i; });
+
+    const outgoing = {};
+    const inDegree = {};
+    nodes.forEach(n => { outgoing[n.id] = []; inDegree[n.id] = 0; });
+    edges.forEach(e => { outgoing[e.from].push(e); inDegree[e.to]++; });
+
+    const rank = {};
+    nodes.forEach(n => { rank[n.id] = 0; });
+    const queue = nodes.filter(n => inDegree[n.id] === 0).map(n => n.id);
+    const inDegreeWork = Object.assign({}, inDegree);
+    while (queue.length) {
+      const id = queue.shift();
+      outgoing[id].forEach(e => {
+        rank[e.to] = Math.max(rank[e.to], rank[id] + 1);
+        inDegreeWork[e.to]--;
+        if (inDegreeWork[e.to] === 0) queue.push(e.to);
+      });
+    }
+
+    const cellMap = {};
+    const ordered = [...nodes].sort((a, b) => rank[a.id] - rank[b.id]);
+    ordered.forEach(n => {
+      const key = laneIndex[n.lane] + ':' + rank[n.id];
+      if (!cellMap[key]) cellMap[key] = [];
+      cellMap[key].push(n.id);
+    });
+
+    const subRow = {};
+    const laneMaxStack = lanes.map(() => 1);
+    Object.keys(cellMap).forEach(key => {
+      const li = parseInt(key.split(':')[0], 10);
+      const ids = cellMap[key];
+      ids.forEach((id, idx) => { subRow[id] = idx; });
+      laneMaxStack[li] = Math.max(laneMaxStack[li], ids.length);
+    });
+
+    const laneHeights = lanes.map((l, i) => LANE_V_PAD * 2 + laneMaxStack[i] * CELL_H + (laneMaxStack[i] - 1) * ROW_GAP);
+    const laneY = [];
+    let acc = 0;
+    laneHeights.forEach(h => { laneY.push(acc); acc += h; });
+    const totalHeight = acc;
+
+    const maxRank = nodes.reduce((m, n) => Math.max(m, rank[n.id]), 0);
+    const totalWidth = MARGIN_LEFT + maxRank * COL_WIDTH + PROCESS_W + MARGIN_RIGHT;
+
+    const positions = {};
+    nodes.forEach(n => {
+      const li = laneIndex[n.lane];
+      const cx = MARGIN_LEFT + PROCESS_W / 2 + rank[n.id] * COL_WIDTH;
+      const cy = laneY[li] + LANE_V_PAD + subRow[n.id] * (CELL_H + ROW_GAP) + CELL_H / 2;
+      const isDecision = n.type === 'decision';
+      const w = isDecision ? DECISION_W : PROCESS_W;
+      const h = isDecision ? DECISION_H : PROCESS_H;
+      positions[n.id] = { cx, cy, w, h, rank: rank[n.id] };
+    });
+
+    return { positions, laneHeights, laneY, totalWidth, totalHeight };
+  }
+
+  function wrapLabel(ctx, text, maxWidth, font) {
+    ctx.font = font;
+    const words = text.split(' ');
+    const lines = [];
+    let current = '';
+    words.forEach(word => {
+      const test = current ? current + ' ' + word : word;
+      if (current && ctx.measureText(test).width > maxWidth) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = test;
+      }
+    });
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  const TYPE_STYLE = {
+    start: { fill: '#4f1f63', gradFrom: '#5c2777', gradTo: '#3d1750', stroke: '#f5a623', text: '#ffffff', shape: 'pill' },
+    process: { fill: '#4f1f63', gradFrom: '#5c2777', gradTo: '#3d1750', stroke: '#f5a623', text: '#ffffff', shape: 'rect' },
+    decision: { fill: '#f5a623', gradFrom: '#f8b84f', gradTo: '#e8940a', stroke: '#4f1f63', text: '#2d1040', shape: 'diamond' },
+    success: { fill: '#2f8f5b', gradFrom: '#3aa76c', gradTo: '#256e47', stroke: '#f5a623', text: '#ffffff', shape: 'pill', icon: '✓' },
+    reject: { fill: '#b0433f', gradFrom: '#c15450', gradTo: '#8f3330', stroke: '#f5a623', text: '#ffffff', shape: 'pill', icon: '✕' },
+    neutral: { fill: '#786a82', gradFrom: '#8a7c93', gradTo: '#655a6d', stroke: '#f5a623', text: '#ffffff', shape: 'pill' }
+  };
+
+  let gradientCounter = 0;
+
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS(SVG_NS, tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(k => el.setAttribute(k, attrs[k]));
+    }
+    return el;
+  }
+
+  function renderDiagram(flow) {
+    const layout = computeLayout(flow);
+    const { positions, laneHeights, totalWidth, totalHeight } = layout;
+
+    // Lane label column
+    laneLabelsEl.innerHTML = '';
+    flow.lanes.forEach((lane, i) => {
+      const row = document.createElement('div');
+      row.className = 'lane-label-row';
+      row.style.height = laneHeights[i] + 'px';
+      row.style.borderLeftColor = lane.accent;
+      row.style.background = i % 2 === 0 ? '#fbf8fd' : '#ffffff';
+      row.innerHTML = '<span class="lane-label-icon">' + lane.icon + '</span><span>' + lane.label + '</span>';
+      laneLabelsEl.appendChild(row);
+    });
+
+    diagramScroll.innerHTML = '';
+    const svg = svgEl('svg', {
+      width: totalWidth,
+      height: totalHeight,
+      viewBox: '0 0 ' + totalWidth + ' ' + totalHeight
+    });
+
+    const defs = svgEl('defs');
+    const marker = svgEl('marker', {
+      id: 'arrowHead', viewBox: '0 0 10 10', refX: '9', refY: '5',
+      markerWidth: '8', markerHeight: '8', orient: 'auto-start-reverse'
+    });
+    marker.appendChild(svgEl('path', { d: 'M0,0 L10,5 L0,10 z', fill: '#4f1f63' }));
+    defs.appendChild(marker);
+
+    const shadowFilter = svgEl('filter', { id: 'nodeDropShadow', x: '-40%', y: '-40%', width: '180%', height: '180%' });
+    const feDrop = svgEl('feDropShadow', { dx: '0', dy: '3', stdDeviation: '3', 'flood-color': '#2d1040', 'flood-opacity': '0.28' });
+    shadowFilter.appendChild(feDrop);
+    defs.appendChild(shadowFilter);
+
+    Object.keys(TYPE_STYLE).forEach(typeKey => {
+      const style = TYPE_STYLE[typeKey];
+      const gradId = 'grad-' + typeKey + '-' + (gradientCounter++);
+      style._gradId = gradId;
+      const grad = svgEl('linearGradient', { id: gradId, x1: '0', y1: '0', x2: '0', y2: '1' });
+      grad.appendChild(svgEl('stop', { offset: '0%', 'stop-color': style.gradFrom }));
+      grad.appendChild(svgEl('stop', { offset: '100%', 'stop-color': style.gradTo }));
+      defs.appendChild(grad);
+    });
+
+    svg.appendChild(defs);
+
+    // Lane background bands
+    flow.lanes.forEach((lane, i) => {
+      svg.appendChild(svgEl('rect', {
+        x: 0, y: layout.laneY[i], width: totalWidth, height: laneHeights[i],
+        fill: i % 2 === 0 ? '#fbf8fd' : '#ffffff'
+      }));
+    });
+    flow.lanes.forEach((lane, i) => {
+      if (i === 0) return;
+      svg.appendChild(svgEl('line', {
+        x1: 0, y1: layout.laneY[i], x2: totalWidth, y2: layout.laneY[i],
+        stroke: '#ece3f2', 'stroke-width': 1
+      }));
+    });
+
+    // Edges (drawn before nodes so arrowheads sit under node shadows)
+    const edgeGroup = svgEl('g', { class: 'edge-group' });
+    const edgeEls = [];
+    flow.edges.forEach((edge, idx) => {
+      const p1 = positions[edge.from];
+      const p2 = positions[edge.to];
+      const x1 = p1.cx + p1.w / 2;
+      const y1 = p1.cy;
+      const x2 = p2.cx - p2.w / 2;
+      const y2 = p2.cy;
+      const midX = (x1 + x2) / 2;
+      const d = 'M ' + x1 + ' ' + y1 + ' C ' + midX + ' ' + y1 + ', ' + midX + ' ' + y2 + ', ' + x2 + ' ' + y2;
+      const path = svgEl('path', {
+        d, fill: 'none', stroke: '#7a5c8a', 'stroke-width': 2,
+        'marker-end': 'url(#arrowHead)'
+      });
+      path.dataset.delay = (Math.max(p1.rank, p2.rank) * 90) + 100;
+      edgeGroup.appendChild(path);
+      edgeEls.push(path);
+
+      if (edge.label) {
+        const lx = (x1 + x2) / 2;
+        const ly = (y1 + y2) / 2;
+        const pillW = Math.max(34, edge.label.length * 6.6 + 14);
+        const pillG = svgEl('g', { transform: 'translate(' + (lx - pillW / 2) + ',' + (ly - 10) + ')' });
+        pillG.appendChild(svgEl('rect', {
+          width: pillW, height: 20, rx: 10, fill: '#f5a623', stroke: '#4f1f63', 'stroke-width': 1
+        }));
+        const pillText = svgEl('text', {
+          x: pillW / 2, y: 14, 'text-anchor': 'middle',
+          'font-size': '10.5', 'font-weight': '700', fill: '#2d1040'
+        });
+        pillText.textContent = edge.label;
+        pillG.appendChild(pillText);
+        edgeGroup.appendChild(pillG);
+      }
+    });
+    svg.appendChild(edgeGroup);
+
+    // Nodes
+    const measureCanvas = document.createElement('canvas');
+    const measureCtx = measureCanvas.getContext('2d');
+    const nodeGroup = svgEl('g', { class: 'node-group' });
+
+    flow.nodes.forEach(node => {
+      const pos = positions[node.id];
+      const style = TYPE_STYLE[node.type] || TYPE_STYLE.process;
+      // Positioning lives on the outer group as a plain SVG transform
+      // attribute. The CSS entrance animation (which sets a CSS `transform`)
+      // goes on a nested inner group instead — a CSS `transform` on the same
+      // element as the SVG `transform` attribute wins and silently replaces
+      // the positional translate, collapsing every node to one spot.
+      const outer = svgEl('g', {
+        class: 'flow-node',
+        transform: 'translate(' + (pos.cx - pos.w / 2) + ',' + (pos.cy - pos.h / 2) + ')',
+        tabindex: '0',
+        role: 'button',
+        'aria-label': node.label
+      });
+      outer.dataset.nodeId = node.id;
+      const g = svgEl('g', {
+        class: 'node-anim',
+        style: 'animation-delay:' + (pos.rank * 80) + 'ms'
+      });
+      outer.appendChild(g);
+
+      let shape;
+      const fillUrl = 'url(#' + style._gradId + ')';
+      if (style.shape === 'diamond') {
+        const w = pos.w, h = pos.h;
+        const points = [
+          (w / 2) + ',0',
+          w + ',' + (h / 2),
+          (w / 2) + ',' + h,
+          '0,' + (h / 2)
+        ].join(' ');
+        shape = svgEl('polygon', {
+          points, fill: fillUrl, stroke: style.stroke, 'stroke-width': 1.6,
+          class: 'node-shape', filter: 'url(#nodeDropShadow)'
+        });
+      } else if (style.shape === 'pill') {
+        shape = svgEl('rect', {
+          width: pos.w, height: pos.h, rx: pos.h / 2, ry: pos.h / 2,
+          fill: fillUrl, stroke: style.stroke, 'stroke-width': 1.6,
+          class: 'node-shape', filter: 'url(#nodeDropShadow)'
+        });
+      } else {
+        shape = svgEl('rect', {
+          width: pos.w, height: pos.h, rx: 10, ry: 10,
+          fill: fillUrl, stroke: style.stroke, 'stroke-width': 1.6,
+          class: 'node-shape', filter: 'url(#nodeDropShadow)'
+        });
+      }
+      g.appendChild(shape);
+
+      const isDiamond = style.shape === 'diamond';
+      const textMaxWidth = isDiamond ? pos.w * 0.62 : pos.w - 26;
+      const fontSize = isDiamond ? 11.5 : 12;
+      const fontWeight = isDiamond ? '700' : '600';
+      const font = fontWeight + ' ' + fontSize + 'px "Segoe UI", Helvetica, Arial, sans-serif';
+      const lines = wrapLabel(measureCtx, node.label, textMaxWidth, font).slice(0, 4);
+      const lineHeight = fontSize * 1.28;
+      const totalTextH = lines.length * lineHeight;
+      const startY = pos.h / 2 - totalTextH / 2 + lineHeight * 0.78;
+
+      const textEl = svgEl('text', {
+        x: pos.w / 2, 'text-anchor': 'middle',
+        'font-size': fontSize, 'font-weight': fontWeight, fill: style.text,
+        'font-family': "'Segoe UI', Helvetica, Arial, sans-serif"
+      });
+      lines.forEach((line, li) => {
+        const tspan = svgEl('tspan', { x: pos.w / 2, y: startY + li * lineHeight });
+        tspan.textContent = line;
+        textEl.appendChild(tspan);
+      });
+      g.appendChild(textEl);
+
+      // Type badge (top-left corner)
+      if (!isDiamond) {
+        const lane = flow.lanes.find(l => l.id === node.lane);
+        const badgeText = style.icon || (lane ? lane.icon : '');
+        if (badgeText) {
+          const badgeG = svgEl('g', { transform: 'translate(14,4)' });
+          badgeG.appendChild(svgEl('circle', { r: 9, fill: 'rgba(255,255,255,0.18)' }));
+          const badgeTxt = svgEl('text', {
+            'text-anchor': 'middle', y: 4, 'font-size': style.icon ? 10 : 9, fill: style.text
+          });
+          badgeTxt.textContent = badgeText;
+          badgeG.appendChild(badgeTxt);
+          g.appendChild(badgeG);
+        }
+      }
+
+      // Click hint ("i" info circle, bottom-right)
+      const hintG = svgEl('g', { class: 'node-hint', transform: 'translate(' + (pos.w - 12) + ',' + (pos.h - 10) + ')' });
+      hintG.appendChild(svgEl('circle', { r: 8, fill: '#ffffff', opacity: '0.92' }));
+      const hintTxt = svgEl('text', { 'text-anchor': 'middle', y: 3.5, 'font-size': '10', 'font-weight': '700', fill: style.stroke === '#4f1f63' ? '#4f1f63' : '#4f1f63' });
+      hintTxt.textContent = 'i';
+      hintG.appendChild(hintTxt);
+      g.appendChild(hintG);
+
+      outer.addEventListener('click', () => openNodeModal(flow, node.id));
+      outer.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          openNodeModal(flow, node.id);
+        }
+      });
+
+      nodeGroup.appendChild(outer);
+    });
+
+    svg.appendChild(nodeGroup);
+    diagramScroll.appendChild(svg);
+
+    // Animate edges drawing in after nodes settle
+    edgeEls.forEach(path => {
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+    });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        edgeEls.forEach(path => {
+          const delay = path.dataset.delay || 0;
+          path.style.transition = 'stroke-dashoffset 0.6s ease ' + delay + 'ms';
+          path.style.strokeDashoffset = '0';
+        });
+      });
+    });
+  }
+
+  function openNodeModal(flow, nodeId) {
+    currentModalNodes = flow.nodes;
+    currentModalIndex = flow.nodes.findIndex(n => n.id === nodeId);
+    const lane = flow.lanes.find(l => l.id === flow.nodes[currentModalIndex].lane);
+    modalRole.textContent = (lane ? lane.icon + ' ' : '') + (lane ? lane.label : '');
+    updateModalContent(flow);
+    modalOverlay.classList.add('show');
+  }
+
+  function updateModalContent(flow) {
+    const node = currentModalNodes[currentModalIndex];
+    const lane = flow.lanes.find(l => l.id === node.lane);
+    modalRole.textContent = (lane ? lane.icon + ' ' : '') + (lane ? lane.label : '');
+    modalTitle.textContent = node.label;
+    modalBody.textContent = node.detail;
+    modalStepCount.textContent = 'Step ' + (currentModalIndex + 1) + ' of ' + currentModalNodes.length;
+    modalPrev.disabled = currentModalIndex <= 0;
+    modalNext.disabled = currentModalIndex >= currentModalNodes.length - 1;
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('show');
+  }
+
+  modalClose.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (evt) => {
+    if (evt.target === modalOverlay) closeModal();
+  });
+  document.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Escape' && modalOverlay.classList.contains('show')) closeModal();
+  });
+  modalPrev.addEventListener('click', () => {
+    if (currentModalIndex > 0) {
+      currentModalIndex--;
+      updateModalContent(flows[currentFlowIndex]);
+    }
+  });
+  modalNext.addEventListener('click', () => {
+    if (currentModalIndex < currentModalNodes.length - 1) {
+      currentModalIndex++;
+      updateModalContent(flows[currentFlowIndex]);
+    }
+  });
+
+  async function renderFlow(index) {
+    const flow = flows[index];
+    const token = ++renderToken;
+
+    flowPanel.classList.remove('visible');
+
+    await new Promise(resolve => setTimeout(resolve, 220));
+    if (token !== renderToken) return;
+
+    flowTitle.textContent = flow.title;
+    flowDescription.textContent = flow.description;
+
+    try {
+      renderDiagram(flow);
+    } catch (err) {
+      diagramScroll.innerHTML = '<p style="color:#c0392b;padding:20px;">Unable to render diagram.</p>';
+      console.error('Diagram render error:', err);
+    }
+
+    requestAnimationFrame(() => {
+      flowPanel.classList.add('visible');
+    });
+  }
+
+  function selectFlow(index) {
+    if (index === currentFlowIndex && flowPanel.classList.contains('visible')) return;
+    currentFlowIndex = index;
+
+    document.querySelectorAll('.nav-item').forEach((item, i) => {
+      item.classList.toggle('active', i === index);
+    });
+
+    closeModal();
+    renderFlow(index);
+    closeSidebarMobile();
+  }
+
+  function closeSidebarMobile() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('show');
+  }
+
+  hamburgerBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    sidebarOverlay.classList.toggle('show');
+  });
+
+  sidebarOverlay.addEventListener('click', closeSidebarMobile);
+
+  function setCurrentDate() {
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('currentDate').textContent = now.toLocaleDateString(undefined, options);
+  }
+
+  function exportAsPng() {
+    const svgEl = diagramScroll.querySelector('svg');
+    if (!svgEl) return;
+
+    const flow = flows[currentFlowIndex];
+    const svgClone = svgEl.cloneNode(true);
+    svgClone.setAttribute('xmlns', SVG_NS);
+
+    const width = parseFloat(svgEl.getAttribute('width'));
+    const height = parseFloat(svgEl.getAttribute('height'));
+
+    // The lane labels are a separate pinned HTML column (not part of the
+    // SVG), so a raw SVG export would lose lane context. Redraw that label
+    // strip onto the canvas alongside the diagram so the PNG is self-contained.
+    const layout = computeLayout(flow);
+    const labelColWidth = 170;
+
+    const scale = 2;
+    const svgData = new XMLSerializer().serializeToString(svgClone);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = (labelColWidth + width) * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(scale, scale);
+
+      flow.lanes.forEach((lane, i) => {
+        const laneY = layout.laneY[i];
+        const laneH = layout.laneHeights[i];
+        ctx.fillStyle = i % 2 === 0 ? '#fbf8fd' : '#ffffff';
+        ctx.fillRect(0, laneY, labelColWidth, laneH);
+        ctx.fillStyle = lane.accent;
+        ctx.fillRect(0, laneY, 4, laneH);
+
+        ctx.fillStyle = '#4f1f63';
+        ctx.font = '700 12px "Segoe UI", Helvetica, Arial, sans-serif';
+        const textLines = wrapLabel(ctx, lane.label, labelColWidth - 40, ctx.font);
+        const lineHeight = 15;
+        const startY = laneY + laneH / 2 - ((textLines.length - 1) * lineHeight) / 2 + 4;
+        ctx.font = '16px "Segoe UI", Helvetica, Arial, sans-serif';
+        ctx.fillText(lane.icon, 14, laneY + laneH / 2 + 5);
+        ctx.font = '700 12px "Segoe UI", Helvetica, Arial, sans-serif';
+        textLines.forEach((line, li) => {
+          ctx.fillText(line, 38, startY + li * lineHeight);
+        });
+      });
+
+      ctx.strokeStyle = '#ece3f2';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(labelColWidth, 0);
+      ctx.lineTo(labelColWidth, height);
+      ctx.stroke();
+
+      ctx.drawImage(img, labelColWidth, 0, width, height);
+      URL.revokeObjectURL(url);
+
+      canvas.toBlob(function (blob) {
+        const link = document.createElement('a');
+        link.download = flow.title.replace(/[^a-z0-9]+/gi, '_') + '.png';
+        link.href = URL.createObjectURL(blob);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      }, 'image/png');
+    };
+    img.onerror = function () {
+      console.error('Failed to load SVG image for PNG export.');
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  function copyMermaidCode() {
+    const flow = flows[currentFlowIndex];
+    const tooltip = document.getElementById('copyTooltip');
+    const originalLabel = tooltip.textContent;
+
+    const showCopied = () => {
+      tooltip.textContent = 'Copied!';
+      tooltip.classList.add('persist');
+      setTimeout(() => {
+        tooltip.classList.remove('persist');
+        tooltip.textContent = originalLabel;
+      }, 1400);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(flow.mermaidCode).then(showCopied).catch(() => {
+        fallbackCopy(flow.mermaidCode);
+        showCopied();
+      });
+    } else {
+      fallbackCopy(flow.mermaidCode);
+      showCopied();
+    }
+  }
+
+  function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+    }
+    document.body.removeChild(textarea);
+  }
+
+  document.getElementById('exportPngBtn').addEventListener('click', exportAsPng);
+  document.getElementById('copyCodeBtn').addEventListener('click', copyMermaidCode);
+
+  buildNav();
+  setCurrentDate();
+  renderFlow(0);
+</script>
